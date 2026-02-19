@@ -142,6 +142,7 @@ class CalendarView(Widget):
 
         from utils.datetime_util import date_to_key
 
+        cells: list[DayCell] = []
         for week in cal:
             for day in week:
                 if day == 0:
@@ -160,7 +161,8 @@ class CalendarView(Widget):
                         has_schedule=(dk in self.schedule_dates),
                         is_selected=(d == self.selected_date),
                     )
-                grid.mount(cell)
+                cells.append(cell)
+        grid.mount_all(cells)
 
     def on_day_cell_selected(self, event: DayCell.Selected) -> None:
         self.selected_date = event.date
