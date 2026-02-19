@@ -136,6 +136,16 @@ class ScheduleForm(ModalScreen[Optional[Schedule]]):
                 yield Button("保存", variant="primary", id="btn-save")
                 yield Button("キャンセル", variant="default", id="btn-cancel")
 
+    BINDINGS = [
+        ("escape", "cancel", "キャンセル"),
+    ]
+
+    def on_mount(self) -> None:
+        self.query_one("#input-date", Input).focus()
+
+    def action_cancel(self) -> None:
+        self.dismiss(None)
+
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "btn-cancel":
             self.dismiss(None)
@@ -250,6 +260,16 @@ class ConfirmDialog(ModalScreen[bool]):
                 yield Button("はい", variant="error", id="btn-yes")
                 yield Button("いいえ", variant="default", id="btn-no")
 
+    BINDINGS = [
+        ("escape", "cancel", "キャンセル"),
+    ]
+
+    def on_mount(self) -> None:
+        self.query_one("#btn-no", Button).focus()
+
+    def action_cancel(self) -> None:
+        self.dismiss(False)
+
     def on_button_pressed(self, event: Button.Pressed) -> None:
         self.dismiss(event.button.id == "btn-yes")
 
@@ -296,6 +316,16 @@ class SearchDialog(ModalScreen[Optional[str]]):
             with Horizontal(id="search-buttons"):
                 yield Button("検索", variant="primary", id="btn-search")
                 yield Button("キャンセル", variant="default", id="btn-search-cancel")
+
+    BINDINGS = [
+        ("escape", "cancel", "キャンセル"),
+    ]
+
+    def on_mount(self) -> None:
+        self.query_one("#search-input", Input).focus()
+
+    def action_cancel(self) -> None:
+        self.dismiss(None)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "btn-search-cancel":
