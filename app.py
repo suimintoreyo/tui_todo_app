@@ -32,7 +32,6 @@ class ScheduleApp(App):
     }
 
     #app-header {
-        dock: top;
         height: 3;
         content-align: center middle;
         text-style: bold;
@@ -143,7 +142,6 @@ class ScheduleApp(App):
     }
 
     #app-footer {
-        dock: bottom;
         height: 3;
         content-align: center middle;
         background: $accent;
