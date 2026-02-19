@@ -21,6 +21,7 @@ class ScheduleForm(ModalScreen[Optional[Schedule]]):
     CSS = """
     ScheduleForm {
         align: center middle;
+        layout: vertical;
     }
 
     #form-container {
@@ -225,6 +226,7 @@ class ConfirmDialog(ModalScreen[bool]):
     CSS = """
     ConfirmDialog {
         align: center middle;
+        layout: vertical;
     }
 
     #confirm-container {
@@ -280,6 +282,7 @@ class SearchDialog(ModalScreen[Optional[str]]):
     CSS = """
     SearchDialog {
         align: center middle;
+        layout: vertical;
     }
 
     #search-container {
