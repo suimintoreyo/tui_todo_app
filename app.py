@@ -48,11 +48,12 @@ class ScheduleApp(App):
     CalendarView {
         width: 1fr;
         min-width: 32;
+        height: 1fr;
         border-right: solid $accent;
     }
 
     #calendar-container {
-        height: 100%;
+        height: auto;
         padding: 0 1;
     }
 
@@ -83,7 +84,7 @@ class ScheduleApp(App):
     #calendar-grid {
         grid-size: 7;
         grid-gutter: 0;
-        height: auto;
+        height: 1fr;
         padding: 0;
     }
 
@@ -91,6 +92,7 @@ class ScheduleApp(App):
         width: 4;
         height: 1;
         content-align: right middle;
+        color: $text;
     }
 
     DayCell.today {
