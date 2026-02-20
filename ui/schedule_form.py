@@ -142,6 +142,9 @@ class ScheduleForm(ModalScreen[Optional[Schedule]]):
     ]
 
     def on_mount(self) -> None:
+        self.call_after_refresh(self._set_initial_focus)
+
+    def _set_initial_focus(self) -> None:
         self.query_one("#input-date", Input).focus()
 
     def action_cancel(self) -> None:
@@ -267,6 +270,9 @@ class ConfirmDialog(ModalScreen[bool]):
     ]
 
     def on_mount(self) -> None:
+        self.call_after_refresh(self._set_initial_focus)
+
+    def _set_initial_focus(self) -> None:
         self.query_one("#btn-no", Button).focus()
 
     def action_cancel(self) -> None:
@@ -325,6 +331,9 @@ class SearchDialog(ModalScreen[Optional[str]]):
     ]
 
     def on_mount(self) -> None:
+        self.call_after_refresh(self._set_initial_focus)
+
+    def _set_initial_focus(self) -> None:
         self.query_one("#search-input", Input).focus()
 
     def action_cancel(self) -> None:

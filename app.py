@@ -335,10 +335,3 @@ class ScheduleApp(App):
     def action_quit_app(self) -> None:
         self.exit()
 
-    def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
-        """モーダル画面がアクティブな場合、App レベルのアクションを無効にする。"""
-        if len(self.screen_stack) > 1:
-            if hasattr(self.screen, f"action_{action}"):
-                return True
-            return False
-        return True
