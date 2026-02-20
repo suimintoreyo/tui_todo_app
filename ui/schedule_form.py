@@ -6,7 +6,7 @@ import datetime
 from typing import Optional
 
 from textual.app import ComposeResult
-from textual.containers import Container, Horizontal
+from textual.containers import Container, Horizontal, VerticalScroll
 from textual.message import Message
 from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Label, Select, Static, TextArea
@@ -27,7 +27,7 @@ class ScheduleForm(ModalScreen[Optional[Schedule]]):
     #form-container {
         width: 60;
         height: auto;
-        max-height: 28;
+        max-height: 80%;
         border: thick $accent;
         background: $surface;
         padding: 1 2;
@@ -87,7 +87,7 @@ class ScheduleForm(ModalScreen[Optional[Schedule]]):
             default_title = ""
             default_memo = ""
 
-        with Container(id="form-container"):
+        with VerticalScroll(id="form-container"):
             yield Static(title, id="form-title")
 
             yield Label("日付 (YYMMDD):", classes="form-label")
