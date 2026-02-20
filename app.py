@@ -73,10 +73,15 @@ class ScheduleApp(App):
     }
 
     #weekday-header {
+        grid-size: 7;
+        grid-gutter: 0;
         height: 1;
     }
 
-    #weekday-row {
+    .weekday-cell {
+        width: 4;
+        height: 1;
+        content-align: center middle;
         text-style: bold;
         color: $accent;
     }
