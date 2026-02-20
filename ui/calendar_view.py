@@ -104,8 +104,9 @@ class CalendarView(Widget):
                 yield Button("◀", id="prev-month", variant="default")
                 yield Label(self._month_label(), id="month-label")
                 yield Button("▶", id="next-month", variant="default")
-            with Container(id="weekday-header"):
-                yield Static(" Mon Tue Wed Thu Fri Sat Sun", id="weekday-row")
+            with Grid(id="weekday-header"):
+                for name in ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]:
+                    yield Static(name, classes="weekday-cell")
             yield Grid(id="calendar-grid")
 
     def on_mount(self) -> None:
