@@ -3,3 +3,10 @@ __pycache__/
 *.pyo
 .venv/
 data/schedules.json.bak
+
+# Nuitka build artifacts
+release/dist/
+release/*.build/
+*.build/
+*.dist/
+*.onefile-build/
