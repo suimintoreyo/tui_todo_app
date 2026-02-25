@@ -148,17 +148,70 @@ def get_system_info(nuitka_version: str | None = None) -> str:
 # ---------------------------------------------------------------------------
 
 def check_nuitka() -> str | None:
-    """Nuitka がインストールされているか確認し、バージョン文字列を返す。"""
+    """Nuitka がインストールされているか確認し、バージョン文字列を返す。
+
+    1. ``nuitka --version`` を試す（stdin 無効・自動ダウンロード許可・10 秒制限）。
+    2. 失敗した場合 ``pip show nuitka`` にフォールバック。
+    """
+    print("[INFO] Nuitka のバージョンを確認中...", flush=True)
+
+    # --- Tier 1: nuitka --version ---
+    version = _check_nuitka_version()
+    if version is not None:
+        return version
+
+    # --- Tier 2: pip show nuitka (フォールバック) ---
+    print(
+        "[WARN] nuitka --version が応答しません。pip show で確認します...",
+        flush=True,
+    )
+    return _check_nuitka_pip()
+
+
+def _check_nuitka_version() -> str | None:
+    """``python -m nuitka --version`` でバージョンを取得する。"""
     try:
         result = subprocess.run(
-            [sys.executable, "-m", "nuitka", "--version"],
+            [
+                sys.executable, "-m", "nuitka",
+                "--assume-yes-for-downloads",
+                "--version",
+            ],
+            stdin=subprocess.DEVNULL,
             capture_output=True,
             text=True,
+            timeout=10,
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            return result.stdout.strip().splitlines()[0]
+    except subprocess.TimeoutExpired:
+        print(
+            "[WARN] nuitka --version がタイムアウトしました（10秒）。",
+            flush=True,
+        )
+    except FileNotFoundError:
+        pass
+    except OSError:
+        pass
+    return None
+
+
+def _check_nuitka_pip() -> str | None:
+    """``pip show nuitka`` でインストール有無とバージョンを取得する。"""
+    try:
+        result = subprocess.run(
+            [sys.executable, "-m", "pip", "show", "nuitka"],
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            text=True,
+            timeout=10,
         )
         if result.returncode == 0:
-            version = result.stdout.strip().splitlines()[0]
-            return version
-    except FileNotFoundError:
+            for line in result.stdout.splitlines():
+                if line.startswith("Version:"):
+                    version = line.split(":", 1)[1].strip()
+                    return f"{version} (pip)"
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
         pass
     return None
 
@@ -183,8 +236,13 @@ def build(*, onefile: bool = False, do_clean: bool = False) -> None:
     # --- Nuitka チェック ---
     nuitka_version = check_nuitka()
     if nuitka_version is None:
-        print("[ERROR] Nuitka がインストールされていません。", flush=True)
-        print("  pip install -r release/requirements-build.txt", flush=True)
+        print("[ERROR] Nuitka が見つからないか、応答がありません。", flush=True)
+        print("  以下を確認してください:", flush=True)
+        print("  1. Nuitka がインストールされているか:", flush=True)
+        print("     pip install -r release/requirements-build.txt", flush=True)
+        print("  2. 'python -m nuitka --version' が正常に動作するか", flush=True)
+        print("  3. C コンパイラ (MinGW64 等) がダウンロード可能か", flush=True)
+        print("  4. ネットワーク/プロキシ環境に問題がないか", flush=True)
         sys.exit(1)
     print(f"[INFO] Nuitka: {nuitka_version}", flush=True)
 
@@ -263,6 +321,7 @@ def build(*, onefile: bool = False, do_clean: bool = False) -> None:
 
         process = subprocess.Popen(
             cmd,
+            stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
