@@ -10,3 +10,6 @@ release/*.build/
 *.build/
 *.dist/
 *.onefile-build/
+
+# Build logs
+log/
