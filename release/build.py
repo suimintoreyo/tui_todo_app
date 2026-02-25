@@ -154,10 +154,16 @@ def check_nuitka() -> str | None:
             [sys.executable, "-m", "nuitka", "--version"],
             capture_output=True,
             text=True,
+            timeout=30,
         )
         if result.returncode == 0:
             version = result.stdout.strip().splitlines()[0]
             return version
+    except subprocess.TimeoutExpired:
+        print(
+            "[WARN] nuitka --version がタイムアウトしました（30秒）。",
+            flush=True,
+        )
     except FileNotFoundError:
         pass
     return None
@@ -183,8 +189,12 @@ def build(*, onefile: bool = False, do_clean: bool = False) -> None:
     # --- Nuitka チェック ---
     nuitka_version = check_nuitka()
     if nuitka_version is None:
-        print("[ERROR] Nuitka がインストールされていません。", flush=True)
-        print("  pip install -r release/requirements-build.txt", flush=True)
+        print("[ERROR] Nuitka が見つからないか、応答がありません。", flush=True)
+        print("  以下を確認してください:", flush=True)
+        print("  1. Nuitka がインストールされているか:", flush=True)
+        print("     pip install -r release/requirements-build.txt", flush=True)
+        print("  2. 'python -m nuitka --version' が正常に動作するか", flush=True)
+        print("  3. ネットワーク/プロキシ環境に問題がないか", flush=True)
         sys.exit(1)
     print(f"[INFO] Nuitka: {nuitka_version}", flush=True)
 
