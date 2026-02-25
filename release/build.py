@@ -39,10 +39,10 @@ class TeeWriter:
 
     def print(self, *args, **kwargs):
         """print() と同じインターフェースで、ターミナル＋ファイルに出力する。"""
+        kwargs["flush"] = True
         print(*args, **kwargs)
         kwargs["file"] = self._file
         print(*args, **kwargs)
-        self._file.flush()
 
     def write_line(self, line: str):
         """1 行をターミナルとファイルに書き出す（末尾改行なし前提）。"""
@@ -74,6 +74,7 @@ def _get_cpu_info() -> str:
 
 def _get_memory_info() -> str:
     """総メモリ量を返す。"""
+    # Linux: /proc/meminfo
     info = _read_proc_file("/proc/meminfo")
     if info:
         for line in info.splitlines():
@@ -81,6 +82,31 @@ def _get_memory_info() -> str:
                 kb = int(line.split()[1])
                 mb = kb // 1024
                 return f"{mb} MB ({mb / 1024:.1f} GB)"
+    # Windows: kernel32.GlobalMemoryStatusEx
+    if platform.system() == "Windows":
+        try:
+            import ctypes
+
+            class MEMORYSTATUSEX(ctypes.Structure):
+                _fields_ = [
+                    ("dwLength", ctypes.c_ulong),
+                    ("dwMemoryLoad", ctypes.c_ulong),
+                    ("ullTotalPhys", ctypes.c_ulonglong),
+                    ("ullAvailPhys", ctypes.c_ulonglong),
+                    ("ullTotalPageFile", ctypes.c_ulonglong),
+                    ("ullAvailPageFile", ctypes.c_ulonglong),
+                    ("ullTotalVirtual", ctypes.c_ulonglong),
+                    ("ullAvailVirtual", ctypes.c_ulonglong),
+                    ("ullAvailExtendedVirtual", ctypes.c_ulonglong),
+                ]
+
+            stat = MEMORYSTATUSEX()
+            stat.dwLength = ctypes.sizeof(stat)
+            ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(stat))
+            mb = stat.ullTotalPhys // (1024 * 1024)
+            return f"{mb} MB ({mb / 1024:.1f} GB)"
+        except Exception:
+            pass
     return "unknown"
 
 
@@ -152,14 +178,15 @@ def clean(tee: TeeWriter | None = None) -> None:
 
 def build(*, onefile: bool = False, do_clean: bool = False) -> None:
     """Nuitka でビルドを実行し、ログを保存する。"""
+    print("[INFO] ビルドスクリプトを開始します...", flush=True)
 
     # --- Nuitka チェック ---
     nuitka_version = check_nuitka()
     if nuitka_version is None:
-        print("[ERROR] Nuitka がインストールされていません。")
-        print("  pip install -r release/requirements-build.txt")
+        print("[ERROR] Nuitka がインストールされていません。", flush=True)
+        print("  pip install -r release/requirements-build.txt", flush=True)
         sys.exit(1)
-    print(f"[INFO] Nuitka: {nuitka_version}")
+    print(f"[INFO] Nuitka: {nuitka_version}", flush=True)
 
     # --- ログ準備 ---
     LOG_DIR.mkdir(parents=True, exist_ok=True)
@@ -231,15 +258,24 @@ def build(*, onefile: bool = False, do_clean: bool = False) -> None:
         tee.print()
 
         # --- Nuitka 実行（tee 方式でストリーム出力） ---
+        env = os.environ.copy()
+        env["PYTHONUNBUFFERED"] = "1"
+
         process = subprocess.Popen(
             cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
+            bufsize=1,
             cwd=PROJECT_ROOT,
+            env=env,
         )
-        for line in process.stdout:
-            tee.write_line(line)
+        while True:
+            line = process.stdout.readline()
+            if not line and process.poll() is not None:
+                break
+            if line:
+                tee.write_line(line)
         exit_code = process.wait()
 
         tee.print()
